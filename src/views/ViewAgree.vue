@@ -2,18 +2,16 @@
 import UiBtn from '@/components/ui/UiBtn.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMessenger } from '@/composables/useMessenger'
 import { useAuth } from '@/composables/useAuth'
-import { storage } from '@/lib/storage'
 
 const router = useRouter()
-const { requestPhone } = useMessenger()
-const { register } = useAuth()
+const { signIn } = useAuth()
 
-// Согласие на ПДн предвыбрано, рассылку подставляем из localStorage (как в оригинале).
+// Согласие на ПДн предвыбрано, рассылку подставляем из localStorage.
 const personal_agree = ref(true)
-const marketing_agree = ref(storage.policy)
+const marketing_agree = ref(localStorage.getItem('policy') === 'true')
 const submitting = ref(false)
+const error = ref('')
 
 const btn_disabled = computed(
 	() => !personal_agree.value || !marketing_agree.value || submitting.value,
@@ -22,16 +20,11 @@ const btn_disabled = computed(
 async function submit() {
 	if (btn_disabled.value) return
 	submitting.value = true
+	error.value = ''
 	try {
-		// Запрашиваем телефон у MAX. Точное поле ответа проверить на реальном устройстве.
-		const contact = await requestPhone()
-		const phone =
-			typeof contact === 'string'
-				? contact
-				: (contact?.phone ?? contact?.phone_number ?? null)
-
 		const consents = { privacy: personal_agree.value, policy: marketing_agree.value }
-		if (await register(phone, consents)) router.replace('/profile')
+		if (await signIn(undefined, consents)) router.replace('/profile')
+		else error.value = 'Не удалось войти. Попробуйте позже.'
 	} finally {
 		submitting.value = false
 	}
@@ -64,7 +57,11 @@ async function submit() {
 					</div>
 				</label>
 			</div>
-			<UiBtn :disabled="btn_disabled" class="w-43 mt-5" @click="submit">Отправить</UiBtn>
+			<div v-if="error" class="mt-5 text-13 text-center text-gray">{{ error }}</div>
+
+			<UiBtn :disabled="btn_disabled" class="w-43 mt-5" @click="submit">
+				{{ submitting ? 'Проверяем…' : 'Отправить' }}
+			</UiBtn>
 		</div>
 	</div>
 </template>

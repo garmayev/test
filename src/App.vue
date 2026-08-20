@@ -1,8 +1,6 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { RouterView, useRouter, useRoute } from 'vue-router'
-import { initMessenger } from '@/composables/useMessenger'
-import { api } from './api/http'
 
 const router = useRouter()
 const route = useRoute()
@@ -15,13 +13,6 @@ router.afterEach(() => {
 	const current = window.history.state?.position ?? 0
 	transition.value = current < lastPosition ? 'slide-right' : 'slide-left'
 	lastPosition = current
-})
-
-// Инициализируем связь с мессенджером (MAX) при старте приложения.
-initMessenger()
-
-onMounted(() => {
-	api.get('/branch/index?filter[company_id]=1');
 })
 </script>
 

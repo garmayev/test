@@ -1,18 +1,16 @@
 import { api } from '@/api/http'
 
-// Проверка существования клиента по chat_id мессенджера.
-// Возвращает клиента (с access_token) или null.
-export function checkChatId(chatId) {
-	return api.get(`/users/check-chat-id/${chatId}`).then((r) => r.data)
-}
-
-// Поиск клиента по телефону.
+// Поиск клиента по телефону — вход в приложение.
+// Возвращает клиента с access_token или null, если такого номера нет.
 export function getUserByPhone(phone) {
 	return api.get('/user/by-phone', { params: { phone } }).then((r) => r.data)
 }
 
-// Регистрация/привязка через мессенджер (source = 'max' | 'telegram').
-// Возвращает клиента с access_token.
-export function registerMessenger(source, data) {
-	return api.post(`/users/register-telegram/${source}`, data).then((r) => r.data)
+// Регистрация нового клиента по телефону. Авторизации не требует, в ответе
+// приходит клиент с access_token — как и у поиска по номеру.
+// source сейчас 'max': бэкенд ждёт его от мини-аппы мессенджера.
+export function registerUser(phone, data = {}) {
+	return api
+		.post('/user/register-telegram', { phone, ...data }, { params: { source: 'max' } })
+		.then((r) => r.data)
 }
