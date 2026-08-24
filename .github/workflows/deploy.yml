@@ -76,8 +76,10 @@ jobs:
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}/uploads/
 
       - name: Notify
+        env:
+          ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
         run: |
-          # Отправляем HTTP на обновленный запрос
+          # Отправляем HTTP запрос только с именем архива
           curl -X POST "https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME" \
             -H "Content-Type: application/json" \
             --max-time 30 \
