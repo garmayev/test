@@ -1,52 +1,12 @@
-name: Deploy to GitHub Pages
+name: Deploy to Server
 
 on:
-    push:
-        branches: [main]
-    # Ручной запуск из вкладки Actions
-    workflow_dispatch:
-
-# Права для публикации на Pages
-permissions:
-    contents: read
-    pages: write
-    id-token: write
-
-
-# Параллельные деплои не нужны: катим последний коммит, лишние отменяем.
-concurrency:
-    group: pages
-    cancel-in-progress: true
+  push:
+    branches: [ main ]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        env:
-            # Приложение живёт в подпапке /<repo>/ — с этой базой собираются ссылки
-            # на ассеты и роуты (router читает import.meta.env.BASE_URL).
-            VITE_BASE: /${{ github.event.repository.name }}/
-            # На Pages нет dev-прокси, поэтому бьём в бэкенд напрямую (нужен CORS).
-            VITE_API_HOST: https://dental-web.pro
-            VITE_API_BASE: https://dental-web.pro/api
-            VITE_COMPANY_ID: '1'
-        steps:
-            - uses: actions/checkout@v4
-
-            - uses: pnpm/action-setup@v4
-              with:
-                  version: 10
-
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 22
-                  cache: pnpm
-
-    deploy:
-        needs: build
-        runs-on: ubuntu-latest
-        environment:
-            name: github-pages
-            url: ${{ steps.deployment.outputs.page_url }}
+  deploy:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -57,6 +17,8 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist/*" # Что копируем (замените на build/*, если у вас React)
-          target: ${{ secrets.SERVER_PATH }}
-          strip_components: 1 # Убирает вложенность исходной папки dist на сервере
+          script: |
+            cd ${{ secrets.SERVER_PATH }}
+            git pull origin main
+            npm install
+            pmx restart all
