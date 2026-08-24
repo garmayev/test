@@ -91,6 +91,7 @@ jobs:
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "ls -la ${{ secrets.SERVER_PATH }}/uploads/$ARCHIVE_NAME"
 
+
       - name: Notify server
         env:
           ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
