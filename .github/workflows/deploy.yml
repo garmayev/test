@@ -58,40 +58,50 @@ jobs:
           echo "ARCHIVE_FILE=$ARCHIVE_FILE" >> $GITHUB_OUTPUT
           echo "ARCHIVE_FILE=$ARCHIVE_FILE" >> $GITHUB_ENV
 
-      - name: Upload to server
-        env:
-          ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
+      - name: Setup SSH key
         run: |
-          # Создаем директорию на сервере через SSH
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
-          
+
+      - name: Create directory on server
+        run: |
           ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "mkdir -p ${{ secrets.SERVER_PATH }}/uploads"
 
-          # Debug
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
-          pwd
-          ls -la ~/
-          ls -la ~/dental-web.pro/
+      - name: Debug - check server paths
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "pwd && ls -la ~/ && ls -la ~/dental-web.pro/ 2>/dev/null || echo 'Directory not found'"
 
-          # Копируем архив через SCP
-          scp -v -o StrictHostKeyChecking=no -i /tmp/deploy_key \
+      - name: Upload archive to server
+        env:
+          ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
+        run: |
+          scp -o StrictHostKeyChecking=no -i /tmp/deploy_key \
             $ARCHIVE_NAME \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}/uploads/
 
-      - name: Notify
+      - name: Verify file uploaded
+        env:
+          ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "ls -la ${{ secrets.SERVER_PATH }}/uploads/$ARCHIVE_NAME"
+
+      - name: Notify server
         env:
           ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
         run: |
           echo "Name: $ARCHIVE_NAME"
-          # Отправляем HTTP запрос с именем архива в URL
           curl -X POST "https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             --max-time 30 \
             --fail \
             --show-error
-          
-          # Очищаем временный ключ
+
+      - name: Cleanup
+        run: |
           rm -f /tmp/deploy_key
