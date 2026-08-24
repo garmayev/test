@@ -70,6 +70,7 @@ jobs:
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "mkdir -p ${{ secrets.SERVER_PATH }}/uploads"
           
+          # Проверка пути на сервере
           echo "Path: ${{ secrets.SERVER_PATH }}"
 
           # Копируем архив через SCP
