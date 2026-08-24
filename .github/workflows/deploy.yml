@@ -58,7 +58,7 @@ jobs:
           echo "ARCHIVE_FILE=$ARCHIVE_FILE" >> $GITHUB_OUTPUT
           echo "ARCHIVE_FILE=$ARCHIVE_FILE" >> $GITHUB_ENV
 
-      - name: Upload to server and notify
+      - name: Upload to server
         env:
           ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
         run: |
@@ -74,9 +74,11 @@ jobs:
           scp -o StrictHostKeyChecking=no -i /tmp/deploy_key \
             $ARCHIVE_NAME \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}/uploads/
-          
+
+      - name: Notify
+        run:          
           # Отправляем HTTP запрос
-          curl -X POST "http://${{ secrets.SERVER_IP }}/company/update-app?company_id=4&artifact_name=$ARCHIVE_NAME" \
+          curl -X POST "https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME" \
             -H "Content-Type: application/json" \
             --max-time 30 \
             --fail \
