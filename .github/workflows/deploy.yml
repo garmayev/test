@@ -70,6 +70,8 @@ jobs:
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "mkdir -p ${{ secrets.SERVER_PATH }}/uploads"
           
+          echo "Path: ${{ secrets.SERVER_PATH }}"
+
           # Копируем архив через SCP
           scp -o StrictHostKeyChecking=no -i /tmp/deploy_key \
             $ARCHIVE_NAME \
