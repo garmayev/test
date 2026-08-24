@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  build-and-archive:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -28,6 +28,9 @@ jobs:
           echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> $GITHUB_ENV
           zip -r $ARCHIVE_NAME dist/
 
+  upload:
+    runs-on: ubuntu-latest
+    steps:
       - name: Upload archive as artifact
         uses: actions/upload-artifact@v4
         with:
@@ -36,7 +39,7 @@ jobs:
           retention-days: 1
 
   deploy:
-    needs: build-and-test
+    needs: upload
     runs-on: ubuntu-latest
     environment: test
     if: github.ref == 'refs/heads/main'
@@ -58,6 +61,8 @@ jobs:
         env:
           ARCHIVE_NAME: ${{ env.ARCHIVE_FILE }}
         run: |
+          echo "SERVER_USER=${{ secrets.SERVER_USER }}"
+          echo "SSH_PRIVATE_KEY=${{ secrets.SSH_PRIVATE_KEY }}"
           # Создаем директорию на сервере через SSH
           ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
