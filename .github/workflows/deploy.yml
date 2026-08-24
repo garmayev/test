@@ -77,7 +77,7 @@ jobs:
 
       - name: Notify
         run: |
-          # Отправляем HTTP запрос
+          # Отправляем HTTP на обновленный запрос
           curl -X POST "https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME" \
             -H "Content-Type: application/json" \
             --max-time 30 \
