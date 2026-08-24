@@ -69,11 +69,17 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "mkdir -p ${{ secrets.SERVER_PATH }}/uploads"
-          
+
+          # Debug
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
+          pwd
+          ls -la ~/
+          ls -la ~/dental-web.pro/
+
           # Копируем архив через SCP
-          scp -o StrictHostKeyChecking=no -i /tmp/deploy_key \
+          scp -v -o StrictHostKeyChecking=no -i /tmp/deploy_key \
             $ARCHIVE_NAME \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:dental-web.pro/web/uploads/
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}/uploads/
 
       - name: Notify
         env:
