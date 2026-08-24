@@ -101,7 +101,7 @@ jobs:
           
           # Явно указываем метод GET с помощью -G или -X GET
           curl -G "https://dental-web.pro/company/unzip" \
-            --data-urlencode "company_id=4" \
+            --data-urlencode "company_id=${{ secrets.COMPANY_ID }}" \
             --data-urlencode "artifact_name=$ARCHIVE_NAME" \
             --fail \
             --show-error \
