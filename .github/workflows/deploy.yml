@@ -12,6 +12,7 @@ permissions:
     pages: write
     id-token: write
 
+
 # Параллельные деплои не нужны: катим последний коммит, лишние отменяем.
 concurrency:
     group: pages
