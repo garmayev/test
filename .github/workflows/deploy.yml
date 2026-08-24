@@ -7,6 +7,8 @@ on:
 jobs:
   build-and-archive:
     runs-on: ubuntu-latest
+    outputs:
+      archive_name: ${{ steps.set_archive.outputs.ARCHIVE_NAME }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,24 +25,22 @@ jobs:
         run: npm run build
 
       - name: Archive dist folder
+        id: set_archive
         run: |
           ARCHIVE_NAME="dist-$(date +%Y%m%d-%H%M%S).zip"
+          echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
           echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> $GITHUB_ENV
           zip -r $ARCHIVE_NAME dist/
 
-  upload:
-    needs: build-and-archive
-    runs-on: ubuntu-latest
-    steps:
       - name: Upload archive as artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist-archive
-          path: ${{ env.ARCHIVE_NAME }}
+          path: ${{ steps.set_archive.outputs.ARCHIVE_NAME }}
           retention-days: 1
 
   deploy:
-    needs: upload
+    needs: build-and-archive
     runs-on: ubuntu-latest
     environment: test
     if: github.ref == 'refs/heads/main'
@@ -54,23 +54,24 @@ jobs:
       - name: Get archive name
         id: get_archive
         run: |
-          ARCHIVE_FILE=$(ls *.zip)
-          echo "ARCHIVE_FILE=$ARCHIVE_FILE" >> $GITHUB_ENV
+          ARCHIVE_FILE=$(ls *.zip | head -n 1)
           echo "ARCHIVE_FILE=$ARCHIVE_FILE" >> $GITHUB_OUTPUT
+          echo "ARCHIVE_FILE=$ARCHIVE_FILE" >> $GITHUB_ENV
 
       - name: Upload to server and notify
         env:
-          ARCHIVE_NAME: ${{ env.ARCHIVE_FILE }}
+          ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
         run: |
-          echo "SERVER_USER=${{ secrets.SERVER_USER }}"
-          echo "SSH_PRIVATE_KEY=${{ secrets.SSH_PRIVATE_KEY }}"
           # Создаем директорию на сервере через SSH
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} \
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          
+          ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "mkdir -p ${{ secrets.SERVER_PATH }}/uploads"
           
           # Копируем архив через SCP
-          scp -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} \
+          scp -o StrictHostKeyChecking=no -i /tmp/deploy_key \
             $ARCHIVE_NAME \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}/uploads/
           
@@ -80,4 +81,6 @@ jobs:
             --max-time 30 \
             --fail \
             --show-error
-          # Update key 2
+          
+          # Очищаем временный ключ
+          rm -f /tmp/deploy_key
