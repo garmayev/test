@@ -29,6 +29,7 @@ jobs:
           zip -r $ARCHIVE_NAME dist/
 
   upload:
+    needs: build-and-archive
     runs-on: ubuntu-latest
     steps:
       - name: Upload archive as artifact
