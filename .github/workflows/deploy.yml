@@ -97,6 +97,7 @@ jobs:
           ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
         run: |
           echo "Name: $ARCHIVE_NAME"
+          echo "URL: https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME"
           curl -X POST "https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             --max-time 30 \
