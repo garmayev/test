@@ -79,7 +79,7 @@ jobs:
         env:
           ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
         run: |
-          echo "Name: ${{ ARCHIVE_NAME }}"
+          echo "Name: $ARCHIVE_NAME"
           # Отправляем HTTP запрос с именем архива в URL
           curl -X POST "https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME" \
             -H "Content-Type: application/x-www-form-urlencoded" \
