@@ -97,10 +97,15 @@ jobs:
           ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
         run: |
           echo "Name: $ARCHIVE_NAME"
-          echo "URL: https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME"
-          curl "https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME" \
+          echo "Sending GET request to: https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME"
+          
+          # Явно указываем метод GET с помощью -G или -X GET
+          curl -G "https://dental-web.pro/company/unzip" \
+            --data-urlencode "company_id=4" \
+            --data-urlencode "artifact_name=$ARCHIVE_NAME" \
             --fail \
-            --show-error
+            --show-error \
+            --verbose
 
       - name: Cleanup
         run: |
