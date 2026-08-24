@@ -70,18 +70,16 @@ jobs:
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "mkdir -p ${{ secrets.SERVER_PATH }}/uploads"
           
-          # Проверка пути на сервере
-          echo "Path: ${{ secrets.SERVER_PATH }}"
-
           # Копируем архив через SCP
           scp -o StrictHostKeyChecking=no -i /tmp/deploy_key \
             $ARCHIVE_NAME \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.SERVER_PATH }}/uploads/
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:dental-web.pro/web/uploads/
 
       - name: Notify
         env:
           ARCHIVE_NAME: ${{ steps.get_archive.outputs.ARCHIVE_FILE }}
         run: |
+          echo "Name: ${{ ARCHIVE_NAME }}"
           # Отправляем HTTP запрос с именем архива в URL
           curl -X POST "https://dental-web.pro/company/unzip?company_id=4&artifact_name=$ARCHIVE_NAME" \
             -H "Content-Type: application/x-www-form-urlencoded" \
